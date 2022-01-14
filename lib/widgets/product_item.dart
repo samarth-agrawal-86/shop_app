@@ -1,20 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/product.dart';
 import '../screens/product_details_page.dart';
 
-class ProductGridItem extends StatelessWidget {
-  const ProductGridItem({
-    Key? key,
-    required this.id,
-    required this.title,
-    required this.imageUrl,
-  }) : super(key: key);
-
-  final String id;
-  final String title;
-  final String imageUrl;
-
+class ProductItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final product = Provider.of<Product>(context, listen: false);
     return Padding(
       padding: const EdgeInsets.all(10.0),
       child: ClipRRect(
@@ -22,22 +14,30 @@ class ProductGridItem extends StatelessWidget {
         child: GridTile(
           child: InkWell(
             onTap: () {
-              Navigator.of(context)
-                  .pushNamed(ProductDetailsPage.routeName, arguments: id);
+              Navigator.of(context).pushNamed(ProductDetailsPage.routeName,
+                  arguments: product.id);
             },
             splashColor: Colors.black45,
             child: Image.network(
-              imageUrl,
+              product.imageUrl,
               fit: BoxFit.cover,
             ),
           ),
           footer: GridTileBar(
             backgroundColor: Colors.black45,
-            leading: IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.favorite_border),
+            leading: Consumer<Product>(
+              builder: (context, product, child) {
+                return IconButton(
+                  onPressed: () {
+                    product.toggleFavoriteStatus();
+                  },
+                  icon: Icon(product.isFavorite
+                      ? Icons.favorite
+                      : Icons.favorite_border),
+                );
+              },
             ),
-            title: Text(title),
+            title: Text(product.title),
             trailing: IconButton(
               onPressed: () {},
               icon: const Icon(Icons.shopping_cart_outlined),

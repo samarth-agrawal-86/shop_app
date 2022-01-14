@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shop_app/models/product.dart';
+import 'package:shop_app/providers/product.dart';
 import '../providers/products.dart';
-import './product_grid_item.dart';
+import 'product_item.dart';
 
 class ProductsGrid extends StatelessWidget {
+  final bool _showFavoritesOnly;
+  ProductsGrid(this._showFavoritesOnly);
+
   @override
   Widget build(BuildContext context) {
     // This is where we are setting the provider listener.
@@ -13,11 +16,13 @@ class ProductsGrid extends StatelessWidget {
     // In the provider of <> here in the angular bracket we can define the type of data we want to listen to
     // we mark them as listen: true
     final productsData = Provider.of<Products>(context, listen: true);
-    print(productsData);
+    //print(productsData);
     //* Instance of 'Products'
 
-    final products = productsData.items;
-    print(products);
+    final products = _showFavoritesOnly == true
+        ? productsData.favoriteItems
+        : productsData.allItems;
+    //print(products);
     //* [Instance of 'Product', Instance of 'Product', Instance of 'Product', Instance of 'Product']
 
     return GridView.builder(
@@ -28,10 +33,13 @@ class ProductsGrid extends StatelessWidget {
         //crossAxisSpacing: 10,
       ),
       itemBuilder: (context, index) {
-        return ProductGridItem(
-          id: products[index].id,
-          title: products[index].title,
-          imageUrl: products[index].imageUrl,
+        return ChangeNotifierProvider.value(
+          value: products[index],
+          //create: (context) => products[index],
+
+          // Flutter doesn't re build the widget. It recycles it. only the data in the widget changes and widget does not.
+          // Provide with create and context is not a good solution here. hence we use .value
+          child: ProductItem(),
         );
       },
     );
