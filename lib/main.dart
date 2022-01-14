@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import './screens/orders_page.dart';
+import './screens/cart_page.dart';
 import './screens/product_details_page.dart';
 import './screens/products_overview_page.dart';
 import './providers/products.dart';
+import './providers/cart.dart';
+import './providers/orders.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,17 +24,25 @@ class MyApp extends StatelessWidget {
     // iii. Provider we chose provides one and only instance of the Provided class to all the child
     // when we make some changes to the object of this class (and call Notify Listeners) ..
     // * All the widgets that are listening to this will re-build
-    return ChangeNotifierProvider(
-      create: (context) => Products(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => Products()),
+        ChangeNotifierProvider(create: (context) => Cart()),
+        ChangeNotifierProvider(create: (context) => Orders()),
+      ],
       child: MaterialApp(
         theme: ThemeData(
           primarySwatch: Colors.purple,
           accentColor: Colors.deepOrange,
           fontFamily: 'Lato',
         ),
-        home: ProductOverviewPage(),
+        //home: ProductOverviewPage(),
+        initialRoute: '/',
         routes: {
+          '/': (ctx) => ProductOverviewPage(),
           ProductDetailsPage.routeName: (ctx) => ProductDetailsPage(),
+          CartPage.routeName: (ctx) => CartPage(),
+          OrdersPage.routeName: (ctx) => OrdersPage(),
         },
       ),
     );

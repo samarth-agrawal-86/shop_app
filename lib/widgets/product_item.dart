@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/product.dart';
+import '../providers/cart.dart';
 import '../screens/product_details_page.dart';
 
 class ProductItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final product = Provider.of<Product>(context, listen: false);
+    final cartData = Provider.of<Cart>(context, listen: false);
     return Padding(
       padding: const EdgeInsets.all(10.0),
       child: ClipRRect(
@@ -39,8 +41,10 @@ class ProductItem extends StatelessWidget {
             ),
             title: Text(product.title),
             trailing: IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.shopping_cart_outlined),
+              onPressed: () {
+                cartData.addItem(product.id, product.title, product.price);
+              },
+              icon: const Icon(Icons.shopping_cart),
             ),
           ),
         ),
