@@ -61,23 +61,23 @@ class CartPage extends StatelessWidget {
             child: ListView.builder(
                 itemCount: cartData.cartItemsCount,
                 itemBuilder: (context, index) {
-                  print(cartData.cartItems);
+                  //print(cartData.cartItems);
                   // cartItems is a dictionary
                   // {p2: Instance of 'CartItem', p1: Instance of 'CartItem'}
 
-                  print(cartData.cartItems.values);
+                  //print(cartData.cartItems.values);
                   // .values convert to Iterables
                   // (Instance of 'CartItem', Instance of 'CartItem')
 
-                  print(cartData.cartItems.values.toList());
+                  //print(cartData.cartItems.values.toList());
                   // We are converting into a list
                   // [Instance of 'CartItem', Instance of 'CartItem']
 
-                  print(cartData.cartItems.values.toList()[index]);
+                  //print(cartData.cartItems.values.toList()[index]);
                   // Instance of 'CartItem'
-                  print(cartData.cartItems.values.toList()[index].id);
+                  //print(cartData.cartItems.values.toList()[index].id);
                   // Red Shirt
-                  print(cartData.cartItems.keys.toList()[index]);
+                  //print(cartData.cartItems.keys.toList()[index]);
 
                   final cartItem = cartData.cartItems.values.toList()[index];
                   return Dismissible(
@@ -94,9 +94,38 @@ class CartPage extends StatelessWidget {
                       alignment: Alignment.centerRight,
                       padding: EdgeInsets.only(right: 20),
                     ),
-                    onDismissed: (dismiss) {
-                      cartData
-                          .removeItem(cartData.cartItems.keys.toList()[index]);
+                    confirmDismiss: (direction) {
+                      return showDialog(
+                        context: context,
+                        builder: (ctx) {
+                          return AlertDialog(
+                            title: Text('Are you Sure!'),
+                            content: Text('Do you want to delete?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(ctx).pop(false);
+                                },
+                                child: Text('No'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(ctx).pop(true);
+                                },
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.red.shade400,
+                                  primary: Colors.white,
+                                ),
+                                child: Text('Yes'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    onDismissed: (direction) {
+                      cartData.removeProduct(
+                          cartData.cartItems.keys.toList()[index]);
                     },
                     child: Card(
                       margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),

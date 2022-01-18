@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/product.dart';
@@ -8,7 +10,7 @@ class ProductItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final product = Provider.of<Product>(context, listen: false);
-    final cartData = Provider.of<Cart>(context, listen: false);
+    final cartData = Provider.of<Cart>(context, listen: true);
     return Padding(
       padding: const EdgeInsets.all(10.0),
       child: ClipRRect(
@@ -43,6 +45,18 @@ class ProductItem extends StatelessWidget {
             trailing: IconButton(
               onPressed: () {
                 cartData.addItem(product.id, product.title, product.price);
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Item Added to Cart'),
+                    duration: Duration(seconds: 1),
+                    action: SnackBarAction(
+                        label: 'UNDO',
+                        onPressed: () {
+                          cartData.removeItem(product.id);
+                        }),
+                  ),
+                );
               },
               icon: const Icon(Icons.shopping_cart),
             ),
