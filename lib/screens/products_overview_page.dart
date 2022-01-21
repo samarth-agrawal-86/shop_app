@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shop_app/providers/cart.dart';
+import 'package:shop_app/providers/products.dart';
 import 'package:shop_app/screens/cart_page.dart';
 import 'package:shop_app/widgets/app_drawer.dart';
 import 'package:shop_app/widgets/badge.dart';
@@ -17,6 +18,42 @@ class ProductOverviewPage extends StatefulWidget {
 
 class _ProductOverviewPageState extends State<ProductOverviewPage> {
   var _showFavoritesOnly = false;
+  var _initFlag = true;
+  var _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    //Provider.of<Products>(context).fetchAndSetProducts(); // WON'T WORK
+
+    // Technically this also runs immediately.
+    // .delayed is a helper constructor and we have put duration as zero
+    // but technically this is registered as TO DO item by dart and it executes after initilization
+    // hence .of(context) gets available
+    // This all happens very fast but technically it is different from executing this line of code only
+    //
+    // Future.delayed(Duration.zero).then((_) {
+    //   Provider.of<Products>(context, listen: false).fetchAndSetProducts();
+    // });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initFlag) {
+      setState(() {
+        _isLoading = true;
+      });
+      Provider.of<Products>(context).fetchAndSetProducts().then((value) {
+        setState(() {
+          _isLoading = false;
+        });
+      });
+    }
+    _initFlag = false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,7 +102,9 @@ class _ProductOverviewPageState extends State<ProductOverviewPage> {
         ],
       ),
       drawer: AppDrawer(),
-      body: ProductsGrid(_showFavoritesOnly),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : ProductsGrid(_showFavoritesOnly),
     );
   }
 }
