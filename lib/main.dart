@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shop_app/screens/edit_product_page.dart';
+import 'package:shop_app/providers/auth.dart';
 
+import './providers/products.dart';
+import './providers/cart.dart';
+import './providers/orders.dart';
 import './screens/users_product_page.dart';
 import './screens/orders_page.dart';
 import './screens/cart_page.dart';
 import './screens/product_details_page.dart';
 import './screens/products_overview_page.dart';
-import './providers/products.dart';
-import './providers/cart.dart';
-import './providers/orders.dart';
+import './screens/auth_screen.dart';
+import './screens/edit_product_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,6 +30,7 @@ class MyApp extends StatelessWidget {
     // * All the widgets that are listening to this will re-build
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (context) => Auth()),
         ChangeNotifierProvider(create: (context) => Products()),
         ChangeNotifierProvider(create: (context) => Cart()),
         ChangeNotifierProvider(create: (context) => Orders()),
@@ -42,7 +45,8 @@ class MyApp extends StatelessWidget {
         //home: ProductOverviewPage(),
         initialRoute: '/',
         routes: {
-          '/': (ctx) => ProductOverviewPage(),
+          '/': (ctx) => AuthScreen(),
+          ProductOverviewPage.routeName: (ctx) => ProductOverviewPage(),
           ProductDetailsPage.routeName: (ctx) => ProductDetailsPage(),
           CartPage.routeName: (ctx) => CartPage(),
           OrdersPage.routeName: (ctx) => OrdersPage(),

@@ -19,6 +19,14 @@ class OrdersPage extends StatefulWidget {
 
 class _OrdersPageState extends State<OrdersPage> {
   var _isExpanded = false;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    Provider.of<Orders>(context, listen: false).fetchAndSetOrder();
+  }
+
   @override
   Widget build(BuildContext context) {
     final ordersData = Provider.of<Orders>(context).allOrders;

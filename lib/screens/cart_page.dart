@@ -2,9 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shop_app/providers/cart.dart';
-import 'package:shop_app/providers/orders.dart';
-import 'package:shop_app/widgets/app_drawer.dart';
+
+import '../providers/cart.dart';
+import '../providers/orders.dart';
+import '../widgets/app_drawer.dart';
 
 class CartPage extends StatelessWidget {
   static const routeName = '/cart';
@@ -44,15 +45,7 @@ class CartPage extends StatelessWidget {
                     ),
                     backgroundColor: Theme.of(context).primaryColor,
                   ),
-                  TextButton(
-                      onPressed: () {
-                        Provider.of<Orders>(context, listen: false).addOrder(
-                          cartData.totalAmount,
-                          cartData.cartItems.values.toList(),
-                        );
-                        cartData.cartClear();
-                      },
-                      child: Text('ORDER NOW'))
+                  OrderButton(cartData: cartData),
                 ],
               ),
             ),
@@ -150,6 +143,49 @@ class CartPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class OrderButton extends StatefulWidget {
+  const OrderButton({
+    Key? key,
+    required this.cartData,
+  }) : super(key: key);
+
+  final Cart cartData;
+
+  @override
+  State<OrderButton> createState() => _OrderButtonState();
+}
+
+class _OrderButtonState extends State<OrderButton> {
+  var _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: widget.cartData.totalAmount <= 0
+          ? null
+          : () {
+              setState(() {
+                _isLoading = true;
+              });
+              Provider.of<Orders>(context, listen: false)
+                  .addOrder(
+                widget.cartData.totalAmount,
+                widget.cartData.cartItems.values.toList(),
+              )
+                  .then((_) {
+                setState(() {
+                  _isLoading = false;
+                });
+              });
+              widget.cartData.cartClear();
+            },
+      child: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Text('ORDER NOW'),
     );
   }
 }
