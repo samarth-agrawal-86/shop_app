@@ -12,7 +12,7 @@ import './screens/orders_page.dart';
 import './screens/cart_page.dart';
 import './screens/product_details_page.dart';
 import './screens/products_overview_page.dart';
-import './screens/auth_screen.dart';
+import 'screens/auth_page.dart';
 import './screens/edit_product_page.dart';
 
 void main() {
