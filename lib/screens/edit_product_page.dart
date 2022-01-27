@@ -46,7 +46,9 @@ class _EditProductPageState extends State<EditProductPage> {
         title: _titleController.text,
         description: _descController.text,
         price: double.parse(_priceController.text),
-        imageUrl: imageUrl,
+        imageUrl: _imageController.text.length == 3
+            ? imageUrl
+            : _imageController.text,
       );
       try {
         await Provider.of<Products>(context, listen: false)

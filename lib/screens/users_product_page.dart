@@ -11,12 +11,13 @@ class UserProductsPage extends StatelessWidget {
   const UserProductsPage({Key? key}) : super(key: key);
 
   Future<void> _refreshProducts(BuildContext context) async {
-    await Provider.of<Products>(context, listen: false).fetchAndSetProducts();
+    await Provider.of<Products>(context, listen: false)
+        .fetchAndSetProducts(userProducts: true);
   }
 
   @override
   Widget build(BuildContext context) {
-    final productsData = Provider.of<Products>(context, listen: true);
+    //final productsData = Provider.of<Products>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: Text('Your Products'),
@@ -29,63 +30,75 @@ class UserProductsPage extends StatelessWidget {
         ],
       ),
       drawer: AppDrawer(),
-      body: RefreshIndicator(
-        onRefresh: () {
-          return _refreshProducts(context);
-        },
-        child: ListView.builder(
-          itemCount: productsData.allItems.length,
-          itemBuilder: (context, index) {
-            var prod = productsData.allItems[index];
-            return Column(
-              children: [
-                SizedBox(height: 4),
-                ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage: NetworkImage(prod.imageUrl),
-                  ),
-                  title: Text(prod.title),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        onPressed: () {},
-                        icon: Icon(Icons.edit),
-                      ),
-                      IconButton(
-                        onPressed: () async {
-                          try {
-                            await productsData.deleteProduct(prod.id);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Item deleted',
-                                  textAlign: TextAlign.center,
+      body: FutureBuilder(
+          future: _refreshProducts(context),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
+            return RefreshIndicator(
+              onRefresh: () => _refreshProducts(context),
+              child: Consumer<Products>(
+                builder: (context, productsData, _) {
+                  return ListView.builder(
+                    itemCount: productsData.allItems.length,
+                    itemBuilder: (context, index) {
+                      var prod = productsData.allItems[index];
+                      return Column(
+                        children: [
+                          SizedBox(height: 4),
+                          ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage: NetworkImage(prod.imageUrl),
+                            ),
+                            title: Text(prod.title),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  onPressed: () {},
+                                  icon: Icon(Icons.edit),
                                 ),
-                              ),
-                            );
-                          } catch (onError) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Item could not be deleted',
-                                  textAlign: TextAlign.center,
+                                IconButton(
+                                  onPressed: () async {
+                                    try {
+                                      await productsData.deleteProduct(prod.id);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Item deleted',
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      );
+                                    } catch (onError) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Item could not be deleted',
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  icon: Icon(Icons.delete,
+                                      color: Colors.red.shade600),
                                 ),
-                              ),
-                            );
-                          }
-                        },
-                        icon: Icon(Icons.delete, color: Colors.red.shade600),
-                      ),
-                    ],
-                  ),
-                ),
-                Divider(),
-              ],
+                              ],
+                            ),
+                          ),
+                          Divider(),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
             );
-          },
-        ),
-      ),
+          }),
     );
   }
 }

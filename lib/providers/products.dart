@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shop_app/models/http_exception.dart';
+import 'package:shop_app/providers/auth.dart';
 import '../dummy_data.dart';
 import 'product.dart';
 
@@ -13,6 +14,10 @@ import 'product.dart';
 // For this we will go in our main and create a Provider and instantiate this class
 
 class Products with ChangeNotifier {
+  final String authtoken;
+  final String userId;
+  Products(this.authtoken, this.userId, this._items);
+
   // this would not be final. because this will change over item
   List<Product> _items = [];
 
@@ -77,7 +82,7 @@ class Products with ChangeNotifier {
 
   Future<void> addProduct(Product product) async {
     final url = Uri.parse(
-        'https://shop-app-526ea-default-rtdb.asia-southeast1.firebasedatabase.app/products.json');
+        'https://shop-app-526ea-default-rtdb.asia-southeast1.firebasedatabase.app/products.json?auth=$authtoken');
 
     try {
       final response = await http.post(
@@ -87,7 +92,8 @@ class Products with ChangeNotifier {
             'title': product.title,
             'description': product.description,
             'price': product.price,
-            'image_url': product.imageUrl
+            'image_url': product.imageUrl,
+            'creator_id': userId,
           },
         ),
       );
@@ -107,23 +113,32 @@ class Products with ChangeNotifier {
     }
   }
 
-  Future<void> fetchAndSetProducts() async {
+  Future<void> fetchAndSetProducts({bool userProducts = false}) async {
+    final filterString =
+        userProducts ? 'orderBy="creator_id"&equalTo="$userId"' : '';
     final url = Uri.parse(
-        'https://shop-app-526ea-default-rtdb.asia-southeast1.firebasedatabase.app/products.json');
+        'https://shop-app-526ea-default-rtdb.asia-southeast1.firebasedatabase.app/products.json?auth=$authtoken&$filterString');
     try {
       final response = await http.get(url);
       final Map<String, dynamic> responseData = jsonDecode(response.body);
       //print(responseData);
       // Out put is nested Map: {id, Map of Product data}
+
+      //* Now we will have favorites data of the user
+      final url2 = Uri.parse(
+          'https://shop-app-526ea-default-rtdb.asia-southeast1.firebasedatabase.app/userFavorites/$userId.json?auth=$authtoken');
+      final favoriteResponse = await http.get(url2);
+      final favoritesData = jsonDecode(favoriteResponse.body);
       final List<Product> loadedProducts = [];
       responseData.forEach((prodId, prodData) {
         var newProd = Product(
-          id: prodId,
-          title: prodData['title'],
-          description: prodData['description'],
-          price: prodData['price'],
-          imageUrl: prodData['image_url'],
-        );
+            id: prodId,
+            title: prodData['title'],
+            description: prodData['description'],
+            price: prodData['price'],
+            imageUrl: prodData['image_url'],
+            isFavorite:
+                favoritesData == null ? false : favoritesData[prodId] ?? false);
         loadedProducts.add(newProd);
       });
       _items = loadedProducts;
@@ -136,7 +151,7 @@ class Products with ChangeNotifier {
   Future<void> updateProduct(String productId, Product updatedProduct) async {
     final prodIndex = _items.indexWhere((prod) => prod.id == productId);
     final url = Uri.parse(
-        'https://shop-app-526ea-default-rtdb.asia-southeast1.firebasedatabase.app/products/$productId.json');
+        'https://shop-app-526ea-default-rtdb.asia-southeast1.firebasedatabase.app/products/$productId.json?auth=$authtoken');
     try {
       final response = await http.patch(
         url,
@@ -145,7 +160,7 @@ class Products with ChangeNotifier {
             'title': updatedProduct.title,
             'description': updatedProduct.description,
             'price': updatedProduct.price,
-            'image_url': updatedProduct.imageUrl
+            'image_url': updatedProduct.imageUrl,
           },
         ),
       );
@@ -161,7 +176,7 @@ class Products with ChangeNotifier {
 
   Future<void> deleteProduct(String productId) async {
     final url = Uri.parse(
-        'https://shop-app-526ea-default-rtdb.asia-southeast1.firebasedatabase.app/products/$productId.json');
+        'https://shop-app-526ea-default-rtdb.asia-southeast1.firebasedatabase.app/products/$productId.json?auth=$authtoken');
 
     final response = await http.delete(url);
     if (response.statusCode >= 400) {

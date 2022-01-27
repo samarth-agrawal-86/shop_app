@@ -22,6 +22,9 @@ class OrderItem {
 
 class Orders with ChangeNotifier {
   List<OrderItem> _orders = [];
+  final String authtoken;
+  final String userId;
+  Orders(this.authtoken, this.userId);
 
   List<OrderItem> get allOrders {
     return [..._orders];
@@ -29,44 +32,48 @@ class Orders with ChangeNotifier {
 
   Future<void> fetchAndSetOrder() async {
     final url = Uri.parse(
-        'https://shop-app-526ea-default-rtdb.asia-southeast1.firebasedatabase.app/orders.json');
+        'https://shop-app-526ea-default-rtdb.asia-southeast1.firebasedatabase.app/orders/$userId.json?auth=$authtoken');
     final List<OrderItem> loadedOrders = [];
     final response = await http.get(url);
 
     if (response.statusCode >= 400) {
       throw 'Error';
     }
-    final responseData = jsonDecode(response.body) as Map<String, dynamic>;
 
-    //{-Mu0a2yI_XNXrRkkljcD: {order_amount: 72.98, order_date: 2022-01-22T17:12:25.063605, products: [{id: 2022-01-22 17:12:21.897551, price: 12.99, quantity: 1, title: Red Shirt}, {id: 2022-01-22 17:12:22.637527, price: 59.99, quantity: 1, title: Trousers}]},
-    //-Mu0cFNkR3tiHLapTHSu: {order_amount: 19.99, order_date: 2022-01-22T17:22:00.162762, products: [{id: 2022-01-22 17:21:58.207143, price: 19.99, quantity: 1, title: Yellow Scarf}]}}
-    if (responseData != null) {
+    if (response.body != 'null') {
+      final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+
+      //{-Mu0a2yI_XNXrRkkljcD: {order_amount: 72.98, order_date: 2022-01-22T17:12:25.063605, products: [{id: 2022-01-22 17:12:21.897551, price: 12.99, quantity: 1, title: Red Shirt}, {id: 2022-01-22 17:12:22.637527, price: 59.99, quantity: 1, title: Trousers}]},
+      //-Mu0cFNkR3tiHLapTHSu: {order_amount: 19.99, order_date: 2022-01-22T17:22:00.162762, products: [{id: 2022-01-22 17:21:58.207143, price: 19.99, quantity: 1, title: Yellow Scarf}]}}
+
       //print(responseData.runtimeType);
       //_InternalLinkedHashMap<String, dynamic>
-      responseData.forEach((orderId, orderData) {
-        //print(orderData['products'].runtimeType);
 
-        final List<dynamic> orderProducts = orderData['products'];
-        final List<CartItem> loadedCarts = [];
-        orderProducts.forEach((cartItem) {
-          final ci = CartItem(
-            id: cartItem['id'],
-            title: cartItem['title'],
-            price: cartItem['price'],
-            quantity: cartItem['quantity'],
+      responseData.forEach(
+        (orderId, orderData) {
+          //print(orderData['products'].runtimeType);
+
+          final List<dynamic> orderProducts = orderData['products'];
+          final List<CartItem> loadedCarts = [];
+          for (var cartItem in orderProducts) {
+            final ci = CartItem(
+              id: cartItem['id'],
+              title: cartItem['title'],
+              price: cartItem['price'],
+              quantity: cartItem['quantity'],
+            );
+            loadedCarts.add(ci);
+          }
+
+          loadedOrders.add(
+            OrderItem(
+                id: orderId,
+                orderAmount: orderData['order_amount'],
+                orderDate: DateTime.parse(orderData['order_date']),
+                products: loadedCarts),
           );
-          loadedCarts.add(ci);
-        });
-
-        loadedOrders.add(
-          OrderItem(
-            id: orderId,
-            orderAmount: orderData['order_amount'],
-            orderDate: DateTime.parse(orderData['order_date']),
-            products: loadedCarts,
-          ),
-        );
-      });
+        },
+      );
 
       //print(loadedOrders);
       _orders = loadedOrders.reversed.toList();
@@ -76,7 +83,7 @@ class Orders with ChangeNotifier {
 
   Future<void> addOrder(double amount, List<CartItem> products) async {
     final url = Uri.parse(
-        'https://shop-app-526ea-default-rtdb.asia-southeast1.firebasedatabase.app/orders.json');
+        'https://shop-app-526ea-default-rtdb.asia-southeast1.firebasedatabase.app/orders/$userId.json?auth=$authtoken');
     // creating this so that timestamp doesn't change when load in firebase vs in local env
     final timestamp = DateTime.now();
     final response = await http.post(
